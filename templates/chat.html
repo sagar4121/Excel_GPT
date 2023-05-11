@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #chat-area {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            width: 100%;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        #chat-form {
+            display: flex;
+        }
+        input[type='text'] {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+        input[type='submit'] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#chat-form').submit(function(event) {
+                event.preventDefault();
+                var message = $('#message').val();
+                $('#chat-area').append('<p><strong>You:</strong> ' + message + '</p>');
+                $('#message').val('');
+                $.ajax({
+                    url: '/ask',
+                    type: 'POST',
+                    data: {'message': message},
+                    success: function(response) {
+                        if (response.error) {
+                            alert(response.error);
+                        } else {
+                            $('#chat-area').append('<p><strong>Excel Chatbot:</strong> ' + response.answer + '</p>');
+                        }
+                    },
+                    error: function() {
+                        alert('Error occurred while sending the message. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Excel Chatbot</h1>
+    <div id="chat-area"></div>
+    <form id="chat-form" action="/ask" method="POST">
+        <input type="text" id="message" name="message" placeholder="Type your question...">
+        <input type="submit" value="Send">
+    </form>
+</body>
+</html>

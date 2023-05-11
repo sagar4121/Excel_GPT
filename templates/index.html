@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type='text'], input[type='file'] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        input[type='submit'] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #file-preview {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        #file-preview th, #file-preview td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #file-preview th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        #proceed-btn {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        function showFilePreview(file) {
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    let file_data = e.target.result;
+                    let file_extension = file.name.split('.').pop().toLowerCase();
+                    let content_type = (file_extension === 'csv') ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    let data = new FormData();
+                    data.append('file', new Blob([file_data], {type: content_type}), file.name);
+                    
+                    $.ajax({
+                        url: '/preview_file',
+                        type: 'POST',
+                        data: data,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            $('#file-preview tbody').html(response);
+                            $('#proceed-btn').show();
+                        },
+                        error: function() {
+                            alert('Error occurred while previewing the file. Please try again.');
+                        }
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        $(document).ready(function() {
+            $('#excel_file').on('change', function() {
+                showFilePreview(this.files[0]);
+            });
+
+            $('#upload-form').on('submit', function() {
+                if (!$('#api_key').val()) {
+                    alert('Please provide an OpenAI API Key');
+                    return false;
+                }
+                if (!$('#excel_file').val()) {
+                    alert('Please upload an Excel or CSV file');
+                    return false;
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Excel Chatbot</h1>
+    <form id="upload-form" method="POST" action="/upload" enctype="multipart/form-data">
+        <label for="api_key">OpenAI API Key:</label>
+        <input type="text" id="api_key" name="api_key" required>
+        <label for="excel_file">Upload an Excel (.xlsx, .xls) or CSV (.csv) file:</label>
+        <input type="file" id="excel_file" name="excel_file" accept=".xlsx,.xls,.csv" required>
+        <table id="file-preview">
+            <thead>
+                <tr>
+                    <!-- The header columns will be populated dynamically -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- The table rows will be populated dynamically -->
+            </tbody>
+        </table>
+        <input type="submit" id="proceed-btn" value="Proceed to Chat">
+    </form>
+</body>
+</html>
